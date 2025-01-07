@@ -1,0 +1,8 @@
+## Interface: 11505
+## Title: |cff1784d1ElvUI|r Ranker
+## Version: 1.0
+## Notes: Create a data text to display Ranker status
+## Author: Grehy-WildGrowth
+## RequiredDeps: ElvUI, Ranker
+
+ElvUI_Ranker.lua
