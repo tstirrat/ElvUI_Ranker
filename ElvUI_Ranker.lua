@@ -197,24 +197,27 @@ local OnEnter = function(self)
         end
     end
 
+    -- MARKS
+    local abMarkCount = GetItemCount(20559, true)
+    local avMarkCount = GetItemCount(20560, true)
+    local wgMarkCount = GetItemCount(20558, true)
 
-	-- if (HK > 0) then
-	-- 	if (Rank and Rank > 0) then
-	-- 		DT.tooltip:AddLine(" ")
-	-- 	end
+    if abMarkCount >= 3 or avMarkCount >= 3 or wgMarkCount >= 3 then
+        DT.tooltip:AddLine(" ")
+        DT.tooltip:AddLine("Marks")
+    end
 
-	-- 	DT.tooltip:AddLine(HONOR_TODAY)
-	-- 	DT.tooltip:AddDoubleLine(HONORABLE_KILLS, BreakUpLargeNumbers(HK), 1, 1, 1, 1, 1, 1)
-	-- end
+    if abMarkCount >= 3 then
+        DT.tooltip:AddDoubleLine("AB", FormatLargeNumber(floor(abMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+    end
+    if avMarkCount >= 3 then
+        DT.tooltip:AddDoubleLine("AV", FormatLargeNumber(floor(avMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+    end
+    if wgMarkCount >= 3 then
+        DT.tooltip:AddDoubleLine("WSG", FormatLargeNumber(floor(wgMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+    end
 
-	-- if (LHK > 0) then
-	-- 	if (Rank and Rank > 0 and HK == 0) or (HK > 0) then
-	-- 		DT.tooltip:AddLine(" ")
-	-- 	end
 
-	-- 	DT.tooltip:AddLine(HONOR_LIFETIME)
-	-- 	DT.tooltip:AddDoubleLine(HONORABLE_KILLS, BreakUpLargeNumbers(LHK), 1, 1, 1, 1, 1, 1)
-	-- end
 
 	DT.tooltip:Show()
 end
