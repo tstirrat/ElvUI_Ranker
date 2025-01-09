@@ -204,17 +204,21 @@ local OnEnter = function(self)
 
     if abMarkCount >= 3 or avMarkCount >= 3 or wgMarkCount >= 3 then
         DT.tooltip:AddLine(" ")
-        DT.tooltip:AddLine("Marks")
+        DT.tooltip:AddLine("Mark of Honor (x3)")
     end
 
+    local turIns = 0
     if abMarkCount >= 3 then
-        DT.tooltip:AddDoubleLine("AB", FormatLargeNumber(floor(abMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+        turnIns = floor(abMarkCount / 3)
+        DT.tooltip:AddDoubleLine(format("AB (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
     end
     if avMarkCount >= 3 then
-        DT.tooltip:AddDoubleLine("AV", FormatLargeNumber(floor(avMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+        turnIns = floor(avMarkCount / 3)
+        DT.tooltip:AddDoubleLine(format("AV (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
     end
     if wgMarkCount >= 3 then
-        DT.tooltip:AddDoubleLine("WSG", FormatLargeNumber(floor(wgMarkCount / 3) * 7500), 1, 1, 1, 1, 1, 1)
+        turnIns = floor(wgMarkCount / 3)
+        DT.tooltip:AddDoubleLine(format("WSG (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
     end
 
 
