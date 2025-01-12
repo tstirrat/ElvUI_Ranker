@@ -1,6 +1,8 @@
 ## ElvUI_Ranker
 
-A simple DataText for ElvUI that shows the current week's milestones and remaining honor for the current milestone.
+A hacky DataText for ElvUI that shows the current week's milestones and remaining honor for the current milestone.
+
+**Note:** It's a very crude hack, so it's likely buggy
 
 It also sums up your inventory "mark of honor" hand-ins
 
