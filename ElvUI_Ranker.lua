@@ -7,8 +7,10 @@ local FormatLargeNumber = FormatLargeNumber
 local GetPVPThisWeekStats = GetPVPThisWeekStats
 local GetPVPRankInfo = GetPVPRankInfo
 local GetPVPRankProgress = GetPVPRankProgress
+local GetItemCount = GetItemCount
 local Ranker = Ranker
 local format = format
+local floor = floor
 
 local debug = true
 
@@ -75,21 +77,15 @@ local objectiveMet = false
 
 local printOptions = function(options)
     local stop = false
-    local output = ""
     
     for key = 1, #options do
         if options[key].honorRemains and options[key].honorRemains > 0 and options[key].rank <= rankerObjective and options[key].situation ~= "+1" and stop ~= true then
             Ranker:OutputToChat("Option #: "..options[key].number.." ("..options[key].situation.."): rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).." with "..FormatLargeNumber(options[key].honorNeed).." honor (missing "..FormatLargeNumber(options[key].honorRemains)..").", debug)
             if maxObtainableRank == options[key].rank then stop = true end
             if options[key].situation == "!!" then
-                if lookupData.defaults.allowDecayPreventionHop == true then
-                    output = output .."You can obtain |cffe6cc80rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).."|r with "..FormatLargeNumber(options[key].honorNeed).." honor."
-                end
             else
-                output = output .."You can obtain |cffe6cc80rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).."|r with "..FormatLargeNumber(options[key].honorNeed).." honor."
             end
             if (options[key].situation == "!!" and lookupData.defaults.allowDecayPreventionHop == true) or options[key].situation ~= "!!" then
-                output = output .."        You need |cffe6cc80"..FormatLargeNumber(options[key].honorRemains).." more|r honor."
             end
         elseif (options[key].honorRemains and options[key].honorRemains <= 0) or (options[key].rank <= rankerObjective) and options[key].situation ~= "+1" and stop ~= true then
             Ranker:OutputToChat("Option #: "..options[key].number.." ("..options[key].situation.."): rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).." with "..FormatLargeNumber(options[key].honorNeed).." honor.", debug)
@@ -97,11 +93,9 @@ local printOptions = function(options)
                 if options[key].situation == "!!" then
                     if lookupData.defaults.allowDecayPreventionHop == true then
                         if options[key].rank >= rankerObjective then objectiveMet = true maxRank = options[key].rank verb = "will" end
-                        output = output .."You "..verb.." be |cffe6cc80rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).."|r."
                     end
                 else
                     if options[key].rank >= rankerObjective then objectiveMet = true maxRank = options[key].rank verb = "will" end
-                    output = output .."You "..verb.." be |cffe6cc80rank "..options[key].rank.." and "..format("%.2f%%", options[key].rankProgress*100).."|r."
                 end
             end
         end
@@ -111,7 +105,7 @@ end
 
 local getCurrentMilestone = function(r, currentHonor)
     for key = 1, #r do
-        if (r[key].honorNeed > currentHonor) then
+        if r[key].honorNeed > currentHonor and r[key].situation ~= "+1" then
             -- print(format("found: remains: %d, need: %d ", r[key].honorRemains, r[key].honorNeed))
             return r[key]
         end
@@ -120,6 +114,17 @@ local getCurrentMilestone = function(r, currentHonor)
 end
 
 local MAX_WEEKLY_HONOR = 500000
+
+local MARK_HONOR = 7500
+
+local getMarkTurnIns = function()
+    local abMarkCount = GetItemCount(20559, true)
+    local avMarkCount = GetItemCount(20560, true)
+    local wsgMarkCount = GetItemCount(20558, true)
+
+    return floor(abMarkCount / 3), floor(avMarkCount / 3), floor(wsgMarkCount / 3)
+
+end
 
 local OnEvent = function(self)
     local _, rank = GetPVPRankInfo(UnitPVPRank("player"), "player")
@@ -132,12 +137,15 @@ local OnEvent = function(self)
     -- printOptions(milestones)
 
     local current = getCurrentMilestone(milestones, currentHonor)
+    -- print(format("current %d, current: %d, marks: %d", current.honorNeed, currentHonor, markHonor))
+
+    local ab, av, wsg = getMarkTurnIns()
+    local markHonor = (ab + av + wsg) * MARK_HONOR
 
     if not current then
         self.text:SetFormattedText(String, "Ranker", "N/A")
     else
-
-        self.text:SetFormattedText(String, "Ranker", "-" .. FormatLargeNumber(current.honorNeed - currentHonor))
+        self.text:SetFormattedText(String, "Ranker", "-" .. FormatLargeNumber(current.honorNeed - currentHonor - markHonor))
     end
 
 	if (not Panel) then
@@ -156,20 +164,21 @@ local OnClick = function()
 end
 
 local OnEnter = function(self)
+    
 	DT:SetupTooltip(self)
 	local Rank = UnitPVPRank("player")
     
 	if (Rank > 0) then
         local rankProgress = floor(GetPVPRankProgress() * 10000000000) / 10000000000
 		local _, rankNumber = GetPVPRankInfo(Rank, "player")
-
+        
 		DT.tooltip:AddDoubleLine("Rank", format("R%d + %.2f%%", rankNumber, rankProgress * 100))
 	end
-
+    
     local _, rank = GetPVPRankInfo(UnitPVPRank("player"), "player")
-
+    
     local _, currentHonor = GetPVPThisWeekStats()
-
+    
     
     local rankProgress = floor(GetPVPRankProgress() * 10000000000) / 10000000000
     local options = Ranker:ChooseYourOwnAdventure(rank, MAX_WEEKLY_HONOR, rankProgress)
@@ -197,31 +206,23 @@ local OnEnter = function(self)
         end
     end
 
-    -- MARKS
-    local abMarkCount = GetItemCount(20559, true)
-    local avMarkCount = GetItemCount(20560, true)
-    local wgMarkCount = GetItemCount(20558, true)
+    local avTurnIns, abTurnIns, wsgTurnIns = getMarkTurnIns()
+    -- local current = getCurrentMilestone(options, currentHonor)
+    -- print(format("current %d, current: %d, marks: %d", current.honorNeed, currentHonor, (avTurnIns + abTurnIns + wsgTurnIns) * MARK_HONOR))
 
-    if abMarkCount >= 3 or avMarkCount >= 3 or wgMarkCount >= 3 then
-        DT.tooltip:AddLine(" ")
+    if avTurnIns or abTurnIns or wsgTurnIns then
         DT.tooltip:AddLine("Mark of Honor (x3)")
     end
 
-    local turIns = 0
-    if abMarkCount >= 3 then
-        turnIns = floor(abMarkCount / 3)
-        DT.tooltip:AddDoubleLine(format("AB (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
+    if avTurnIns > 0 then
+        DT.tooltip:AddDoubleLine(format("AB (x%d)", avTurnIns), FormatLargeNumber(avTurnIns * MARK_HONOR), 1, 1, 1, 1, 1, 1)
     end
-    if avMarkCount >= 3 then
-        turnIns = floor(avMarkCount / 3)
-        DT.tooltip:AddDoubleLine(format("AV (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
+    if abTurnIns > 0 then
+        DT.tooltip:AddDoubleLine(format("AV (x%d)", abTurnIns), FormatLargeNumber(abTurnIns * MARK_HONOR), 1, 1, 1, 1, 1, 1)
     end
-    if wgMarkCount >= 3 then
-        turnIns = floor(wgMarkCount / 3)
-        DT.tooltip:AddDoubleLine(format("WSG (x%d)", turnIns), FormatLargeNumber(turnIns * 7500), 1, 1, 1, 1, 1, 1)
+    if wsgTurnIns > 0 then
+        DT.tooltip:AddDoubleLine(format("WSG (x%d)", wsgTurnIns), FormatLargeNumber(wsgTurnIns * MARK_HONOR), 1, 1, 1, 1, 1, 1)
     end
-
-
 
 	DT.tooltip:Show()
 end
